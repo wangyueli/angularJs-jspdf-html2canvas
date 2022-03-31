@@ -10,7 +10,16 @@ angularJs 将html网页转换为pdf文件并发送给后端
 
 
 
-#js 代码
+#js代码
+
+
+
+
+
+
+
+
+
      $scope.loadPdf = function () {
         let printEle = document.getElementById('print-pdf')
         html2canvas(printEle, {
