@@ -1,6 +1,5 @@
 # angularJs-jspdf-html2canvas
-angularJs 将html网页转换为pdf文件并发送给后端
-
+angularJs 将html网页转换为pdf文件并发送给后端, 解决滚动条以外变成黑色问题及缺少图表问题
 #资源 
 <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.js"></script>
 <script src="//static.yuncaitong.cn/asset/html2canvas.min.js"></script>
@@ -20,10 +19,31 @@ angularJs 将html网页转换为pdf文件并发送给后端
 
 
 
-     $scope.loadPdf = function () {
-        let printEle = document.getElementById('print-pdf')
-        html2canvas(printEle, {
-            onrendered:function(canvas) {
+     $scope.exportpdf = function(){
+        var element = $("#print-pdf")
+        var w = element.width()
+        var h = element.height()
+        var offsetTop = element.offset().top;
+        var offsetLeft = element.offset().left;
+        var canvas = document.createElement('canvas')
+        var abs = 0;
+        var win_i = $(window).width()
+        var win_o = window.innerWidth;
+        if(win_o>win_i){
+            abs = (win_o-win_i)/2
+        }
+        canvas.width = w*4
+        canvas.height = h*4
+        var context = canvas.getContext('2d')
+        context.scale(4, 4)
+        context.translate(-offsetLeft-abs, -offsetTop)
+
+        html2canvas(element, {
+            allowTaint: true,
+            taintTest: true,
+            canvas: canvas,
+            dpi: 172,
+            onrendered: function(canvas){
                 var contentWidth = canvas.width;
                 var contentHeight = canvas.height;
 
@@ -39,14 +59,14 @@ angularJs 将html网页转换为pdf文件并发送给后端
 
                 var pageData = canvas.toDataURL('image/jpeg', 1.0);
 
-                var pdf = new jsPDF('', 'pt', 'a4');
+                var pdf = new jsPDF('', 'pt', 'a4')
                 //有两个高度需要区分，一个是html页面的实际高度，和生成pdf的页面高度(841.89)
                 //当内容未超过pdf一页显示的范围，无需分页
                 if (leftHeight < pageHeight) {
-                    pdf.addImage(pageData, 'JPEG', 20, 0, imgWidth, imgHeight );
+                    pdf.addImage(pageData, 'JPEG', 0, 0, imgWidth, imgHeight );
                 } else {
                     while(leftHeight > 0) {
-                        pdf.addImage(pageData, 'JPEG', 20, position, imgWidth, imgHeight)
+                        pdf.addImage(pageData, 'JPEG', 0, position, imgWidth, imgHeight)
                         leftHeight -= pageHeight;
                         position -= 841.89;
                         //避免添加空白页
@@ -55,7 +75,10 @@ angularJs 将html网页转换为pdf文件并发送给后端
                         }
                     }
                 }
-                
+
+                // 保存下载到本地
+                pdf.save($('#print-pdf').text() + '.pdf')
+
                 // 将pdf输入为base格式的字符串
                 var buffer = pdf.output("datauristring")
                 // 将base64格式的字符串转换为file文件
@@ -68,6 +91,7 @@ angularJs 将html网页转换为pdf文件并发送给后端
                 xhr.open('POST', url, false)
                 xhr.send(formdata)
                 console.log(xhr.responseText); 
+                
 
             }
         })
